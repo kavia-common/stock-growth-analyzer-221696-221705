@@ -30,6 +30,17 @@ Local development
 2. Create .env from example:
    cp .env.example .env
    # Adjust variables as needed
+
+   Important CORS note:
+   - Set ALLOWED_ORIGINS to your frontend origin(s).
+     For local dev: ALLOWED_ORIGINS=http://localhost:3000
+     For cloud preview (replace host accordingly):
+       ALLOWED_ORIGINS=https://vscode-internal-13394-beta.beta01.cloud.kavia.ai:3000
+
+   To verify at runtime, visit GET /cors-info:
+     Local:  http://localhost:3001/cors-info
+     Cloud:  https://<your-host>:3001/cors-info
+
 3. Create virtualenv and install requirements (if not handled by the environment):
    pip install -r requirements.txt
 4. Run the API:
