@@ -105,6 +105,11 @@ def analyze_growth_endpoint(payload: AnalyzeGrowthRequest = Body(...)) -> Analyz
             price_field=pf,
             client=client,
         )
+        if not results:
+            warnings = list(warnings) + [
+                "No results for the selected universe and dates. This can happen if the requested dates fall on non-trading "
+                "days or if the provider lacks coverage for many symbols. Please try business days within the range or adjust the period."
+            ]
         return AnalyzeGrowthResponse(results=results, warnings=warnings)
     except HTTPException:
         raise

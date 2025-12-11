@@ -52,11 +52,29 @@ class StooqClient(FinanceClient):
         self.base_url = base_url or "https://stooq.com/q/d/l/?s={symbol}&i=d"
 
     def symbol_for_provider(self, ticker: str) -> str:
-        return f"{ticker.strip().lower()}.us"
+        """
+        Map common US tickers to Stooq's dotted-suffix symbols.
+        Examples:
+        - BRK.B -> brk-b.us
+        - BF.B  -> bf-b.us
+        Default: lower + '.us'
+        """
+        t = ticker.strip().lower()
+        # Normalize S&P 500 style dot tickers to hyphen per Stooq convention
+        dot_map = {
+            "brk.b": "brk-b.us",
+            "bf.b": "bf-b.us",
+        }
+        if t in dot_map:
+            return dot_map[t]
+        # Also handle other potential dot forms generically: replace '.' with '-'
+        if "." in t:
+            t = t.replace(".", "-")
+        return f"{t}.us"
 
     def get_daily_bars(self, symbol: str, start: date, end: date) -> List[PriceBar]:
         url = self.base_url.format(symbol=symbol)
-        # Sequential sync call is fine.
+        # Fetch full series (Stooq returns daily history); do not pre-filter by [start, end] here.
         with httpx.Client(timeout=20.0) as client:
             r = client.get(url)
             r.raise_for_status()
@@ -76,9 +94,7 @@ class StooqClient(FinanceClient):
                 if not d_str:
                     continue
                 d = datetime.strptime(d_str, "%Y-%m-%d").date()
-                if d < start or d > end:
-                    # We could read all and filter by date range as requested.
-                    continue
+
                 def to_float(key_variants: Iterable[str]) -> Optional[float]:
                     for k in key_variants:
                         v = row.get(k)

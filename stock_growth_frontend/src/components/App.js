@@ -20,7 +20,11 @@ function App() {
       setRows(results || []);
       setWarnings(warnings || []);
       if ((results || []).length === 0 && (!warnings || warnings.length === 0)) {
-        setWarnings(["No results were returned. Try adjusting dates or universe/tickers."]);
+        setWarnings([
+          "No results were returned. Likely the selected dates are non-trading days (weekend/holiday) "
+          + "or the data provider lacks coverage for chosen symbols. Try shifting to nearby business days "
+          + "or adjust the universe/tickers."
+        ]);
       }
     } catch (e) {
       setError(e.message || "Failed to fetch results.");

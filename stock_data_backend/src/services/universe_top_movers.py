@@ -83,4 +83,10 @@ def get_top_movers_universe(
         universe=universe,
     )
     results, warnings = analyze_growth(temp_req, client)
+    if not results:
+        warnings = list(warnings) + [
+            "Universe screening returned no results. Likely causes: selected dates are not trading days for many symbols "
+            "(weekend/holiday), or the data provider lacks coverage for selected universe symbols in that period. "
+            "Try shifting start/end to nearby business days or reducing filters."
+        ]
     return results, warnings
