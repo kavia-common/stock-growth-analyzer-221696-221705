@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, List
 
 from fastapi import Body, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -36,6 +36,21 @@ app.add_middleware(
 def health_check():
     """Health check endpoint that returns a simple JSON object."""
     return {"message": "Healthy"}
+
+# PUBLIC_INTERFACE
+@app.get(
+    "/cors-info",
+    tags=["Health"],
+    summary="CORS and configuration info",
+    description="Returns the currently effective CORS allowed origins and a hint about the backend URL.",
+    responses={200: {"description": "Current configuration snapshot."}},
+)
+def cors_info() -> Dict[str, List[str] | str]:
+    """Return selected runtime configuration details to help diagnose CORS/base URL issues."""
+    return {
+        "allowed_origins": settings.allowed_origins(),
+        "hint_backend_base_url": "http://localhost:3001",
+    }
 
 
 @app.get(
