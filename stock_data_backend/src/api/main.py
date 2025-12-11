@@ -2,7 +2,7 @@ from typing import Dict
 
 from fastapi import Body, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from starlette.responses import JSONResponse
+
 
 from src.api.schemas import AnalyzeGrowthRequest, AnalyzeGrowthResponse, PriceField
 from src.config import settings
@@ -26,7 +26,7 @@ origins = settings.allowed_origins()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
-    allow_credentials=True,
+    allow_credentials=False,  # do not allow credentials for permissive preview defaults
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -46,7 +46,9 @@ def health_check():
 )
 def get_providers() -> Dict[str, str]:
     """Return active provider info determined by environment configuration."""
-    provider = settings.FINANCE_API_PROVIDER or "stooq"
+    provider = (settings.FINANCE_API_PROVIDER or "stooq").lower()
+    if provider not in {"stooq", "alpha_vantage"}:
+        provider = "stooq"
     notes = "Default provider (no API key required)" if provider == "stooq" else "Requires API key"
     return {"active_provider": provider, "notes": notes}
 
@@ -107,8 +109,6 @@ def analyze_growth_endpoint(payload: AnalyzeGrowthRequest = Body(...)) -> Analyz
     except HTTPException:
         raise
     except Exception as e:
-        # Generic error handling
-        return JSONResponse(
-            status_code=500,
-            content={"detail": f"Internal error: {e}"},
-        )
+        # Be resilient: return 200 with empty results and a warning instead of 500 for provider/data gaps
+        warn = f"Processing warning: {str(e)}"
+        return AnalyzeGrowthResponse(results=[], warnings=[warn])
