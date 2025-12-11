@@ -14,18 +14,18 @@ class PriceField(str, Enum):
 
 class AnalyzeGrowthRequest(BaseModel):
     """Request payload for growth analysis."""
-    tickers: List[str] = Field(..., description="List of stock tickers to analyze (e.g., ['AAPL','MSFT']).")
+    tickers: Optional[List[str]] = Field(None, description="List of stock tickers to analyze (e.g., ['AAPL','MSFT']). Optional; when omitted or empty, top movers for the specified universe are returned.")
     start_date: date = Field(..., description="Start date for analysis (YYYY-MM-DD).")
     end_date: date = Field(..., description="End date for analysis (YYYY-MM-DD).")
     min_growth_pct: Optional[float] = Field(None, description="Optional minimum growth percentage filter (e.g., 5 means >=5%).")
     max_growth_pct: Optional[float] = Field(None, description="Optional maximum growth percentage filter (e.g., 50 means <=50%).")
     limit: int = Field(10, description="Maximum number of results to return, sorted by growth percentage desc.")
     price_field: Optional[PriceField] = Field(PriceField.close, description="Which price field to use for growth calculation.")
+    universe: Optional[str] = Field("NASDAQ", description="Universe to screen when tickers are not provided. Defaults to 'NASDAQ'.")
 
     @model_validator(mode="after")
     def validate_dates_and_tickers(self):
-        if not self.tickers or len([t for t in self.tickers if t and t.strip()]) == 0:
-            raise ValueError("tickers must be a non-empty list of symbols.")
+        # Validate dates and limit
         if self.start_date > self.end_date:
             raise ValueError("start_date must be less than or equal to end_date.")
         if self.limit <= 0:
@@ -33,6 +33,19 @@ class AnalyzeGrowthRequest(BaseModel):
         if self.min_growth_pct is not None and self.max_growth_pct is not None:
             if self.min_growth_pct > self.max_growth_pct:
                 raise ValueError("min_growth_pct cannot be greater than max_growth_pct.")
+
+        # tickers are optional; if provided, ensure at least one valid symbol and basic formatting
+        if self.tickers is not None:
+            cleaned = [t.strip() for t in self.tickers if t and t.strip()]
+            if len(cleaned) == 0:
+                # treat as empty list (universe mode) by normalizing to []
+                self.tickers = []
+            else:
+                # basic validation: symbols are alnum+.-_ and start with a letter/number
+                for sym in cleaned:
+                    if not sym[0].isalnum():
+                        raise ValueError(f"Invalid ticker format: {sym}")
+                self.tickers = cleaned
         return self
 
 

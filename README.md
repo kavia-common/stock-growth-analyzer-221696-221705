@@ -8,7 +8,7 @@ This backend provides endpoints to analyze stock growth over a date range by fet
 Endpoints:
 - GET / — Health check
 - GET /providers — Returns the active provider info
-- POST /analyze-growth — Computes growth for provided tickers
+- POST /analyze-growth — Computes growth for provided tickers, or when no tickers are provided, returns top N movers for a default universe (NASDAQ)
 
 Environment variables (see stock_data_backend/.env.example):
 - FINANCE_API_PROVIDER: stooq (default) or alpha_vantage
@@ -19,6 +19,10 @@ Environment variables (see stock_data_backend/.env.example):
 Stooq symbol mapping:
 - For common US tickers, the backend maps AAPL -> aapl.us, MSFT -> msft.us, etc.
 - Not all instruments are available on Stooq; expect warnings for missing data.
+
+Default behavior for empty tickers
+- If 'tickers' is omitted or empty in POST /analyze-growth, the backend computes the top N movers (sorted by growth_pct desc) within the specified 'universe' (default: NASDAQ), using the provided 'start_date', 'end_date', and 'limit' (default 10).
+- The NASDAQ universe is a curated list (nasdaq_100.txt) located in stock_data_backend/data/symbols.
 
 Local development
 1. cd stock_data_backend
@@ -32,9 +36,9 @@ Local development
 
 OpenAPI schema
 - Generate openapi.json (writes into stock_data_backend/interfaces/openapi.json):
-  python -m src.api.generate_openapi
+  python -m src.api.generate_openAPI
 
-Example request body for /analyze-growth:
+Example request body for /analyze-growth (explicit tickers):
 {
   "tickers": ["AAPL", "MSFT"],
   "start_date": "2024-01-02",
@@ -42,5 +46,14 @@ Example request body for /analyze-growth:
   "min_growth_pct": 0,
   "max_growth_pct": 1000,
   "limit": 10,
+  "price_field": "close"
+}
+
+Example request body for /analyze-growth (universe top movers):
+{
+  "start_date": "2024-01-02",
+  "end_date": "2024-03-29",
+  "limit": 10,
+  "universe": "NASDAQ",
   "price_field": "close"
 }
