@@ -62,7 +62,7 @@ def get_providers() -> Dict[str, str]:
         "\n\nNotes:\n"
         "- Default provider is Stooq. Symbols are mapped to lowercase with '.us' suffix (e.g., AAPL -> aapl.us).\n"
         "- Alpha Vantage can be used by setting FINANCE_API_PROVIDER=alpha_vantage and FINANCE_API_KEY.\n"
-        "- If 'tickers' is omitted or empty, the endpoint returns the top N movers within the specified 'universe' (default: NASDAQ), using 'limit' (default: 10)."
+        "- If 'tickers' is omitted or empty, the endpoint returns the top N movers within the specified 'universe' (default: NASDAQ; also supports 'SP500' for S&P 500), using 'limit' (default: 10)."
     ),
     response_model=AnalyzeGrowthResponse,
     responses={

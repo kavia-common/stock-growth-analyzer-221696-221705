@@ -34,11 +34,19 @@ def _read_symbol_file(fname: str) -> List[str]:
 def get_universe_symbols(universe: str) -> List[str]:
     """Return a list of symbols for the given universe name.
 
-    Currently supports 'NASDAQ' via a curated nasdaq_100.txt list.
+    Currently supports:
+    - 'NASDAQ' (or 'NASDAQ_100') via nasdaq_100.txt
+    - 'SP500' (or 'S&P_500') via sp500.txt
     """
     uni = (universe or "NASDAQ").strip().upper()
-    if uni == "NASDAQ" or uni == "NASDAQ_100":
+    # NASDAQ 100
+    if uni in {"NASDAQ", "NASDAQ_100"}:
         syms = _read_symbol_file("nasdaq_100.txt")
+        if syms:
+            return syms
+    # S&P 500
+    if uni in {"SP500", "S&P_500", "S&P500"}:
+        syms = _read_symbol_file("sp500.txt")
         if syms:
             return syms
     # Fallback: empty list

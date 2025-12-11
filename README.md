@@ -8,7 +8,7 @@ This backend provides endpoints to analyze stock growth over a date range by fet
 Endpoints:
 - GET / — Health check
 - GET /providers — Returns the active provider info
-- POST /analyze-growth — Computes growth for provided tickers, or when no tickers are provided, returns top N movers for a default universe (NASDAQ)
+- POST /analyze-growth — Computes growth for provided tickers, or when no tickers are provided, returns top N movers for a selected universe (NASDAQ default; supports S&P 500 as 'SP500')
 
 Environment variables (see stock_data_backend/.env.example):
 - FINANCE_API_PROVIDER: stooq (default) or alpha_vantage
@@ -21,8 +21,9 @@ Stooq symbol mapping:
 - Not all instruments are available on Stooq; expect warnings for missing data.
 
 Default behavior for empty tickers
-- If 'tickers' is omitted or empty in POST /analyze-growth, the backend computes the top N movers (sorted by growth_pct desc) within the specified 'universe' (default: NASDAQ), using the provided 'start_date', 'end_date', and 'limit' (default 10).
+- If 'tickers' is omitted or empty in POST /analyze-growth, the backend computes the top N movers (sorted by growth_pct desc) within the specified 'universe' (default: NASDAQ; also supports 'SP500' for S&P 500), using the provided 'start_date', 'end_date', and 'limit' (default 10).
 - The NASDAQ universe is a curated list (nasdaq_100.txt) located in stock_data_backend/data/symbols.
+- The S&P 500 universe is a curated list (sp500.txt) located in stock_data_backend/data/symbols.
 
 Local development
 1. cd stock_data_backend
@@ -33,6 +34,9 @@ Local development
    pip install -r requirements.txt
 4. Run the API:
    uvicorn src.api.main:app --host 0.0.0.0 --port 3001 --reload
+
+Frontend Universe selector
+- The SearchForm in the frontend provides a "Universe" dropdown (NASDAQ 100 or S&P 500). When no tickers are entered, this value is sent in the request as `universe` (default 'NASDAQ').
 
 OpenAPI schema
 - Generate openapi.json (writes into stock_data_backend/interfaces/openapi.json):
@@ -55,5 +59,14 @@ Example request body for /analyze-growth (universe top movers):
   "end_date": "2024-03-29",
   "limit": 10,
   "universe": "NASDAQ",
+  "price_field": "close"
+}
+
+Example request body for /analyze-growth (S&P 500 universe top movers):
+{
+  "start_date": "2024-01-02",
+  "end_date": "2024-03-29",
+  "limit": 10,
+  "universe": "SP500",
   "price_field": "close"
 }

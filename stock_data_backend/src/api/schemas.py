@@ -12,6 +12,11 @@ class PriceField(str, Enum):
     open = "open"
 
 
+class Universe(str, Enum):
+    """Supported universes for empty-ticker screening."""
+    NASDAQ = "NASDAQ"
+    SP500 = "SP500"  # Accepts aliases 'S&P_500', 'S&P500' via normalization in service layer
+
 class AnalyzeGrowthRequest(BaseModel):
     """Request payload for growth analysis."""
     tickers: Optional[List[str]] = Field(None, description="List of stock tickers to analyze (e.g., ['AAPL','MSFT']). Optional; when omitted or empty, top movers for the specified universe are returned.")
@@ -21,7 +26,7 @@ class AnalyzeGrowthRequest(BaseModel):
     max_growth_pct: Optional[float] = Field(None, description="Optional maximum growth percentage filter (e.g., 50 means <=50%).")
     limit: int = Field(10, description="Maximum number of results to return, sorted by growth percentage desc.")
     price_field: Optional[PriceField] = Field(PriceField.close, description="Which price field to use for growth calculation.")
-    universe: Optional[str] = Field("NASDAQ", description="Universe to screen when tickers are not provided. Defaults to 'NASDAQ'.")
+    universe: Universe = Field(Universe.NASDAQ, description="Universe to screen when tickers are not provided. Defaults to 'NASDAQ'. Accepts 'SP500' for S&P 500.")
 
     @model_validator(mode="after")
     def validate_dates_and_tickers(self):
